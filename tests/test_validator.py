@@ -1,5 +1,5 @@
 from src.main import BaseModel
-from src.validator import validator, root_validator
+from src.validator import root_validator, validator
 
 
 def test_validator_handles_multiple_fields():
@@ -37,7 +37,6 @@ def test_root_validator_modifies_input_kwargs():
         first_name: str
         last_name: str
         full_name: str
-
 
         @root_validator()
         def build_full_name(cls, values):

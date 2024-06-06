@@ -13,19 +13,22 @@ class BaseModel(metaclass=ModelMetaclass):
 
     def __init_subclass__(subcls) -> None:
         super().__init_subclass__()
-        for name, type in subcls._fields().items():
-            setattr(subcls, name, Field(name, type))
+        for name, field_type in subcls._fields().items():
+            setattr(subcls, name, Field(name, field_type))
 
     def __init__(self, **kwargs) -> None:
         for validator in self._root_validators:
             kwargs = validator.__func__(self.__class__, kwargs)
         # By iterating over self._fields instead of kwargs, we ignore any extra non-declared fields
         for name in self._fields():
-            value = kwargs.pop(name, None)
+            value = kwargs.get(name, None)
             if validators := self._validators.get(name):
                 for validator in validators:
                     value = validator.__func__(self.__class__, value)
             setattr(self, name, value)
+
+    def json(self) -> str:
+        return json.dumps(self.dict())
 
     def dict(self) -> dict[str, Any]:
         return {
@@ -33,9 +36,6 @@ class BaseModel(metaclass=ModelMetaclass):
             for name, attr in self.__class__.__dict__.items()
             if isinstance(attr, Field)
         }
-
-    def json(self) -> str:
-        return json.dumps(self.dict())
 
     def __repr__(self) -> str:
         kwargs = ", ".join(f"{key}={value!r}" for key, value in self.dict().items())
